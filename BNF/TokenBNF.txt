@@ -1,0 +1,104 @@
+/* ENSC 251 -- Summer 2023 -- Simon Fraser University */
+
+/* Here's the definition for some tokens for our subset-C grammar */
+/* Other tokens, such as for character and string literals, are left as an exercise */
+
+/* Whitespace is not allowed inside the tokens below, though of course a character literal 
+   can contain one and a string can contain multiple whitespace characters */
+
+	gen_assignment_operator : '=' | '/=' | '+=' | '-=' 
+						;
+						
+	int_assignment_operator : '%=' | '<<=' | '>>='
+							;
+
+/* We are also going to consider the ternary operator, '?' */
+	ternary_operator : '?'
+				 ;
+										
+	shift_operator   : '<<' | '>>'
+					 ;
+				
+	additive_operator : '+' | '-'
+					  ;
+				
+	div_operator : '/'
+				 ;
+				 
+	mod_operator : '%'
+				 ;
+			 
+/* complement */
+	comp_operator  : '~'
+				    ;				   
+				   			
+	postfix_operator : '++' | '--'
+					 ;
+
+/*
+id stands for identifier which begins with "letter" and followed by zero or more instances of "letdig"
+*/
+    id 			: letter {letdig}*
+    			;
+
+/*
+int_const can be one or more digits.
+*/
+    int_const	: digit
+    			| digit int_const
+    			;
+    			
+/*
+	char_const	: **** fill this in ****
+*/    			
+
+/*
+float_const production rule would can begin with either "real" or "int_const". After that is decided, next thing to check
+would be presense of exponent followed by suffix. Note that suffix is not a mandatory part as it can evaluate to "empty".
+*/
+   	float_const : float_const_base
+   				| float_const_base suffix
+   				;
+   				
+   	float_const_base : real
+   				| real exponent
+   				| int_const exponent
+   				;
+
+/*
+real production can have"
+	- period followed by int_const
+	- int_const followed by period
+	- int_const followed by period followed by int_const
+*/
+   	real        :   '.' int_const
+                |   int_const '.'
+                |   int_const '.' int_const
+                ;
+/*
+In exponent production rule, 'e' or 'E' is simply a character. Any of following 6 production rule is valid for exponent.
+*/
+   	exponent    : 'e' '+' int_const    (note: not empty, the letter 'e' )
+                | 'e' '-' int_const
+                | 'e' int_const
+                | 'E' '+' int_const
+                | 'E' '-' int_const
+                | 'E' int_const 
+                ;
+/*
+As far as our course project is concerned, suffix can only be 'f' or 'F' or nothing.
+*/
+    suffix      :  'f' | 'F'
+    			;
+/*
+letdig can be either digit or letter.
+*/
+    letdig 		: digit | letter
+    			;
+
+    letter 		: '_' | 'a' | . . . | 'z' | 'A' | . . . | 'Z'
+    			;
+
+    digit 		: '0' | . . . | '9'
+    			;
+
