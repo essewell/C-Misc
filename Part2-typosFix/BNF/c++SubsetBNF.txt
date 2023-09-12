@@ -1,0 +1,210 @@
+/* ENSC 251 -- Summer 2023 -- Simon Fraser University */
+
+/* This is the Backus-Naur Form (BNF) grammar for the subset of C++ language that we are going to use for our course project. */
+/* It is derived from sources including:
+       http://www.cs.man.ac.uk/~pjj/bnf/c_syntax.bnf
+*/
+
+/* Here are some tokens that are used by the C++ subset grammar. */
+/* Examples of these tokens are described in a separate file. */
+/* Other tokens, such as for punctuators and operators, appear as
+   BNF string literals below in the form 'xx' */
+%token int_const char_const float_const id string 
+%%
+
+/* Whitespace is allowed between tokens in the below C++ subset grammar. */
+
+/*
+main_body is the main production rule for our BNF. 
+*/
+
+	main_body      	: stat_list ';'
+					;
+
+/*
+stat_list can have one or more of the stat production rule where each instance must be separated with a ';' (semicolon). Note that while creating 
+Abstract Syntax Tree, ';' will become the root of the tree / subtree and multiple stat rules could be the branches from that root.
+Please refer to the diagram in the instructions provided to you.
+*/
+
+	stat_list 		: stat {';' stat}*
+					;
+
+/*
+stat can have either declaration or assignment_exp production rule.
+*/
+
+	stat 		: declaration
+				| assignment_exp							
+				;
+
+/*
+declaration production rule makes call to the declarator rule and then it checks if declaratory rule
+result is followed by id. It is a must that your declaration have both of these entities to be
+syntactically correct.
+*/
+
+	declaration : declarator id
+				;
+				
+				
+/*
+declarator production rule checks for the type_spec. If the type spec is followed by �*�, then add
+the type_spec object as a child to punctuator object representing �*� and return pointer to �*�.
+Otherwise, only return pointer to the type_spec object.
+*/
+
+
+	declarator 	: type_spec '*'
+				| type_spec				
+				;
+	
+	int_type_spec 	: 'char' | 'int'
+				;				
+
+	type_spec 	: int_type_spec | 'float'
+				;
+				
+/*
+If the first production rules are not satisfied, then we check for ternary expression
+*/
+
+	assignment_exp  : id gen_assignment_operator assignment_exp
+					| int_id int_assignment_operator int_assignment_exp
+					| ternary_exp					
+					;
+									
+	int_assignment_exp  : int_id assignment_operator assignment_exp
+						| int_id int_assignment_operator int_assignment_exp
+						| int_ternary_exp
+						;									
+					
+	gen_assignment_operator : '=' | '/=' | '+=' | '-=' 
+						;
+						
+	int_assignment_operator : '%=' | '<<=' | '>>='
+							;
+
+/*
+The subtree created for the top production would have �?� as the root of the subtree � id, assignment_exp, and
+another ternary_exp would become its children.
+*/
+ /* **** this eventually needs to be fixed -- assignment_exp ':' assignment_exp  ??? *** */
+	ternary_exp : id '?' assignment_exp ':' ternary_exp
+				| shift_expression
+				| additive_exp
+				;
+				
+	int_ternary_exp : id '?' int_assignment_exp ':' int_ternary_exp
+				| shift_expression
+				;
+
+/*
+shift_expression can also be represented as �additive_exp {shift_operator int_additive_exp}*�
+where * means zero or more instances of {shift_operator int_additive_exp}
+*/
+					
+	shift_expression : int_additive_exp {shift_operator int_additive_exp}*					 
+					 ;
+										
+	shift_operator   : '<<' | '>>'
+					 ;
+
+/*
+additive_exp can also be represented as �div_exp {additive_operator div_exp}*�
+where * means zero or more instances of { additive_operator div_exp }
+*/
+					
+	additive_exp 	: div_exp {additive_operator div_exp}*
+					;					
+					
+	int_additive_exp : int_div_exp {additive_operator int_div_exp}*
+					 ;					
+					
+	additive_operator : '+' | '-'
+					  ;
+
+/*
+div_exp can also be represented as �unary_exp {div_operator unary_exp}*�
+where * means zero or more instances of { div_operator unary_exp }
+*/
+
+	div_exp : comp_exp {div_operator comp_exp}*
+			| int_div_exp ;
+			;
+
+	int_div_exp : int_comp_exp {mod_operator int_comp_exp}*
+				| int_comp_exp {div_operator int_comp_exp}*
+				;
+						
+	div_operator : '/'
+				 ;
+				 
+	mod_operator : '%'
+				 ;
+			 
+/*
+unary_exp production rule first checks for unary_operator, if the token is unary_operator then
+unary_exp calls itself recursively. But, if the token is not unary_operator, then it checks for the
+postfix_exp.
+*/
+					
+	comp_exp 	: comp_operator int_comp_exp
+				| postfix_exp
+				;
+				
+	int_comp_exp 	: comp_operator int_comp_exp
+				| int_postfix_exp
+				;
+
+	comp_operator  : '~'
+				    ;				   
+				   
+/*
+After checking for the primary expression and retrieving its sub tree, you can check for postfix operator. If there exists a postfix operator;
+then it becomes the root of the subtree with primary expression as a child. 
+*/
+
+	postfix_exp : id postfix_operator 
+				| primary_exp 
+				;
+
+	int_postfix_exp : int_id postfix_operator
+					| int_primary_exp 
+					;
+				
+	postfix_operator : '++' | '--'
+					 ;
+					 
+///////////////////					 
+					 
+	int_primary_exp : int_id
+				| numeric_int_const
+				| '(' int_assignment_exp ')'
+				;
+				 
+	primary_exp : numeric_id
+				| constant
+				| '(' assignment_exp ')'
+				;
+								
+	int_id 		: numeric_id
+    			;    		
+    			    		
+	numeric_id	: id
+    			;    		    		
+	/* pointer_ids need work */
+	pointer_id	: id
+    			;    		    		
+	
+////////////////////
+								
+	numeric_int_const : int_const
+				 	  | char_const
+				 	  ;
+				
+				
+	constant   : numeric_int_const
+					| float_const
+					| string
+					;
